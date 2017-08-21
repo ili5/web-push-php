@@ -13,7 +13,9 @@ namespace Minishlink\WebPush;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Pool;
+use GuzzleHttp\Event\CompleteEvent;
+use GuzzleHttp\Message\Request;
 use GuzzleHttp\Promise;
 
 class WebPush
@@ -153,25 +155,21 @@ class WebPush
         $completeSuccess = true;
         foreach ($batches as $batch) {
             // for each endpoint server type
-            $requests = $this->prepare($batch);
-            $promises = [];
-            foreach ($requests as $request) {
-                $promises[] = $this->client->sendAsync($request);
-            }
-            $results = Promise\settle($promises)->wait();
-
-            foreach ($results as $result) {
-                if ($result['state'] === "rejected") {
-                    /** @var RequestException $reason **/
-                    $reason = $result['reason'];
-
+            $requests = $this->prepare($batch);            
+            Pool::send($this->client, $requests, [
+                'complete'  =>  function(CompleteEvent $event) use ($return){                
+                    $return[] = array(
+                        'success' => true,
+                    );
+                },
+                'error' =>  function(ErrorEvent $event) use($completeSuccess, $return){                       
                     $error = array(
                         'success' => false,
-                        'endpoint' => "".$reason->getRequest()->getUri(),
-                        'message' => $reason->getMessage(),
+                        'endpoint' => "".$event->getRequest()->getUri(),
+                        'message' => $event->getRequest()->getConfig()->get('message'),
                     );
 
-                    $response = $reason->getResponse();
+                    $response = $event->getResponse();
                     if ($response !== null) {
                         $statusCode = $response->getStatusCode();
                         $error['statusCode'] = $statusCode;
@@ -182,12 +180,39 @@ class WebPush
 
                     $return[] = $error;
                     $completeSuccess = false;
-                } else {
-                    $return[] = array(
-                        'success' => true,
-                    );
                 }
-            }
+            ]);                       
+            
+//            $results = Promise\settle$(promises)->wait();
+
+//            foreach ($results as $result) {
+//                if ($result['state'] === "rejected") {
+//                    /** @var RequestException $reason **/
+//                    $reason = $result['reason'];
+//
+//                    $error = array(
+//                        'success' => false,
+//                        'endpoint' => "".$reason->getRequest()->getUri(),
+//                        'message' => $reason->getMessage(),
+//                    );
+//
+//                    $response = $reason->getResponse();
+//                    if ($response !== null) {
+//                        $statusCode = $response->getStatusCode();
+//                        $error['statusCode'] = $statusCode;
+//                        $error['expired'] = in_array($statusCode, array(404, 410));
+//                        $error['content'] = $response->getBody();
+//                        $error['headers'] = $response->getHeaders();
+//                    }
+//
+//                    $return[] = $error;
+//                    $completeSuccess = false;
+//                } else {
+//                    $return[] = array(
+//                        'success' => true,
+//                    );
+//                }
+//            }
         }
 
         // reset queue
@@ -267,8 +292,13 @@ class WebPush
                     $headers['Crypto-Key'] = $vapidHeaders['Crypto-Key'];
                 }
             }
-
-            $requests[] = new Request('POST', $endpoint, $headers, $content);
+            
+            $requests[] = $this->client->createRequest('POST', $endpoint, [
+                'headers'   =>  $headers,
+                'body'      =>  $content,
+                'future'    =>  true
+            ]);
+//            $requests[] = new Request('POST', $endpoint, $headers, $content);
         }
 
         return $requests;

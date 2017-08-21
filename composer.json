@@ -1,5 +1,5 @@
 {
-  "name": "ili5/web-push",
+  "name": "minishlink/web-push",
   "type": "library",
   "description": "Web Push library for PHP",
   "keywords": ["push", "notifications", "web", "WebPush", "Push API"],
@@ -10,6 +10,11 @@
       "name": "Louis Lagrange",
       "email": "lagrange.louis@gmail.com",
       "homepage": "https://github.com/Minishlink"
+    },
+    {
+        "name":"Ilija Petkovic",
+        "email":"ilija.petkovic93@gmail.com",
+        "homepage":"https://github.com/ili5/"
     }
   ],
   "require": {

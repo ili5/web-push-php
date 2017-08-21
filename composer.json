@@ -1,9 +1,9 @@
 {
-  "name": "minishlink/web-push",
+  "name": "ili5/web-push",
   "type": "library",
   "description": "Web Push library for PHP",
   "keywords": ["push", "notifications", "web", "WebPush", "Push API"],
-  "homepage": "https://github.com/web-push-libs/web-push-php",
+  "homepage": "https://github.com/ili5/web-push-php",
   "license": "MIT",
   "authors": [
     {

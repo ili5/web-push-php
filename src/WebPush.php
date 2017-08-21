@@ -181,38 +181,7 @@ class WebPush
                     $return[] = $error;
                     $completeSuccess = false;
                 }
-            ]);                       
-            
-//            $results = Promise\settle$(promises)->wait();
-
-//            foreach ($results as $result) {
-//                if ($result['state'] === "rejected") {
-//                    /** @var RequestException $reason **/
-//                    $reason = $result['reason'];
-//
-//                    $error = array(
-//                        'success' => false,
-//                        'endpoint' => "".$reason->getRequest()->getUri(),
-//                        'message' => $reason->getMessage(),
-//                    );
-//
-//                    $response = $reason->getResponse();
-//                    if ($response !== null) {
-//                        $statusCode = $response->getStatusCode();
-//                        $error['statusCode'] = $statusCode;
-//                        $error['expired'] = in_array($statusCode, array(404, 410));
-//                        $error['content'] = $response->getBody();
-//                        $error['headers'] = $response->getHeaders();
-//                    }
-//
-//                    $return[] = $error;
-//                    $completeSuccess = false;
-//                } else {
-//                    $return[] = array(
-//                        'success' => true,
-//                    );
-//                }
-//            }
+            ]);                                   
         }
 
         // reset queue
@@ -298,7 +267,6 @@ class WebPush
                 'body'      =>  $content,
                 'future'    =>  true
             ]);
-//            $requests[] = new Request('POST', $endpoint, $headers, $content);
         }
 
         return $requests;

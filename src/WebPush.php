@@ -15,6 +15,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use GuzzleHttp\Event\CompleteEvent;
+use GuzzleHttp\Event\ErrorEvent;
 use GuzzleHttp\Message\Request;
 use GuzzleHttp\Promise;
 
@@ -157,19 +158,20 @@ class WebPush
             // for each endpoint server type
             $requests = $this->prepare($batch);            
             Pool::send($this->client, $requests, [
-                'complete'  =>  function(CompleteEvent $event) use ($return){                
+                'complete'  =>  function(CompleteEvent $event) use (&$return){                
                     $return[] = array(
                         'success' => true,
                     );
                 },
-                'error' =>  function(ErrorEvent $event) use($completeSuccess, $return){                       
+                'error' =>  function(ErrorEvent $event) use(&$completeSuccess, &$return){                       
                     $error = array(
                         'success' => false,
-                        'endpoint' => "".$event->getRequest()->getUri(),
+                        'endpoint' => "".$event->getRequest()->getUrl(),
                         'message' => $event->getRequest()->getConfig()->get('message'),
                     );
+                    
 
-                    $response = $event->getResponse();
+                    $response = $event->getResponse();                    
                     if ($response !== null) {
                         $statusCode = $response->getStatusCode();
                         $error['statusCode'] = $statusCode;
@@ -181,7 +183,7 @@ class WebPush
                     $return[] = $error;
                     $completeSuccess = false;
                 }
-            ]);                                   
+            ]);  
         }
 
         // reset queue
